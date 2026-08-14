@@ -1,0 +1,54 @@
+name: Optimize ghost pathfinding
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Optimize ghost path recalculation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old_create = '''function createGhost(cell,img,speed){\n  const p=centerOf(cell[0],cell[1]);\n  return {x:p.x,y:p.y,img,speed,wobble:Math.random()*Math.PI*2,path:null,pathTimer:0};\n}'''
+
+          new_create = '''function createGhost(cell,img,speed){\n  const p=centerOf(cell[0],cell[1]);\n  return {\n    x:p.x,\n    y:p.y,\n    img,\n    speed,\n    wobble:Math.random()*Math.PI*2,\n    path:null,\n    pathTimer:0,\n    targetKey:""\n  };\n}'''
+
+          if old_create in s:
+              s = s.replace(old_create, new_create, 1)
+
+          pattern = re.compile(r'function updateGhosts\(dt,now\)\{[\s\S]*?\n\}\n\n/\* ---------- PLAYER ---------- \*/', re.M)
+
+          new_update = '''function updateGhosts(dt,now){\n  const targetC=Math.floor(player.x/TILE);\n  const targetR=Math.floor(player.y/TILE);\n  const targetKey=`${targetC},${targetR}`;\n\n  for(const g of ghosts){\n    g.pathTimer-=dt;\n\n    // Пересчитываем маршрут только при смене клетки игрока\n    // или раз в 0.4 секунды. Это резко снижает нагрузку.\n    if(g.pathTimer<=0 || g.targetKey!==targetKey){\n      g.path=findPath(g.x,g.y,player.x,player.y);\n      g.targetKey=targetKey;\n      g.pathTimer=.4;\n    }\n\n    if(!g.path||g.path.length<2)continue;\n\n    const next=centerOf(g.path[1].c,g.path[1].r);\n    const dx=next.x-g.x,dy=next.y-g.y,len=Math.hypot(dx,dy);\n    if(!len)continue;\n\n    const step=Math.min(g.speed*dt,len);\n    g.x+=dx/len*step;\n    g.y+=dy/len*step;\n    g.wobble+=dt*4;\n  }\n}\n\n/* ---------- PLAYER ---------- */'''
+
+          s2 = pattern.sub(new_update, s, count=1)
+          if s2 == s:
+              raise SystemExit('Could not find updateGhosts block')
+
+          p.write_text(s2, encoding='utf-8')
+          PY
+
+      - name: Commit optimization
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "No ghost optimization changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Reduce ghost pathfinding load"
+          git push
