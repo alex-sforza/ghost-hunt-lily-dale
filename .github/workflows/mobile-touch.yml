@@ -1,0 +1,133 @@
+name: Add touch-anywhere control
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  mobile-touch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Replace mobile controls with touch-anywhere steering
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          # Hide the old four-arrow mobile buttons.
+          s = s.replace('''#touchControls{\n  display:none;''', '''#touchControls{\n  display:none!important;''', 1)
+          s = s.replace('''  #touchControls{\n    display:grid;\n  }''', '''  #touchControls{\n    display:none!important;\n  }''', 1)
+          s = s.replace('''  #touchControls{\n    display:none;\n  }''', '''  #touchControls{\n    display:none!important;\n  }''')
+
+          # Keep the old HTML inert; it is hidden and no longer used.
+          touch_css = '''\n/* Touch-anywhere steering: the game canvas itself is the controller. */\n#game{\n  -webkit-user-select:none;\n  user-select:none;\n}\n'''
+          if 'Touch-anywhere steering' not in s:
+              s = s.replace('</style>', touch_css + '</style>', 1)
+
+          # Add a direct canvas touch controller before the button bindings.
+          marker = '/* ---------- BUTTONS ---------- */'
+          touch_js = r'''/* ---------- MOBILE TOUCH: TOUCH ANYWHERE ---------- */
+let touchSteering = false;
+let touchPointerId = null;
+
+function canvasPointFromEvent(event) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (event.clientX - rect.left) * (canvas.width / rect.width),
+    y: (event.clientY - rect.top) * (canvas.height / rect.height)
+  };
+}
+
+function setTouchDirection(point) {
+  if (!player || !running || paused || gameOver) return;
+
+  const dx = point.x - player.x;
+  const dy = point.y - player.y;
+  const threshold = 10;
+
+  keys.up = false;
+  keys.down = false;
+  keys.left = false;
+  keys.right = false;
+
+  if (Math.abs(dx) < threshold && Math.abs(dy) < threshold) return;
+
+  // Направление выбирается по доминирующей оси.
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    if (dx > 0) keys.right = true;
+    else keys.left = true;
+  } else {
+    if (dy > 0) keys.down = true;
+    else keys.up = true;
+  }
+}
+
+canvas.addEventListener('pointerdown', event => {
+  if (event.pointerType !== 'touch') return;
+  if (!running || paused || gameOver) return;
+
+  event.preventDefault();
+  touchSteering = true;
+  touchPointerId = event.pointerId;
+  canvas.setPointerCapture?.(event.pointerId);
+  setTouchDirection(canvasPointFromEvent(event));
+});
+
+canvas.addEventListener('pointermove', event => {
+  if (!touchSteering || event.pointerId !== touchPointerId) return;
+  if (event.pointerType !== 'touch') return;
+
+  event.preventDefault();
+  setTouchDirection(canvasPointFromEvent(event));
+});
+
+function stopTouchSteering(event) {
+  if (!touchSteering || event.pointerId !== touchPointerId) return;
+
+  touchSteering = false;
+  touchPointerId = null;
+  keys.up = false;
+  keys.down = false;
+  keys.left = false;
+  keys.right = false;
+}
+
+canvas.addEventListener('pointerup', stopTouchSteering);
+canvas.addEventListener('pointercancel', stopTouchSteering);
+canvas.addEventListener('lostpointercapture', event => {
+  if (!touchSteering) return;
+  touchSteering = false;
+  touchPointerId = null;
+  keys.up = false;
+  keys.down = false;
+  keys.left = false;
+  keys.right = false;
+});
+
+'''
+          if 'MOBILE TOUCH: TOUCH ANYWHERE' not in s:
+              s = s.replace(marker, touch_js + marker, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit touch control
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "Touch control already applied."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Replace mobile buttons with touch-anywhere control"
+          git push
