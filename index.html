@@ -1,0 +1,1736 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Руквуд Мэнор — Охота на призраков</title>
+<style>
+:root{
+  color-scheme:dark;
+  --gold:#e5c58e;
+  --muted:#cdbda5;
+  --dark:#0b0b0d;
+}
+
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  min-height:100%;
+  background:#090a0c;
+  color:#f3eadb;
+  font-family:Georgia,"Times New Roman",serif;
+}
+
+body{
+  display:flex;
+  justify-content:center;
+  overflow-x:hidden;
+}
+
+button{
+  font:inherit;
+}
+
+#app{
+  width:min(1180px,100vw);
+  padding:8px 10px 16px;
+}
+
+#layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 245px;
+  gap:12px;
+  align-items:start;
+}
+
+#stage{
+  position:relative;
+  min-width:0;
+}
+
+#game{
+  display:block;
+  width:100%;
+  height:auto;
+  aspect-ratio:4/3;
+  max-height:calc(100vh - 76px);
+  background:#101214;
+  border:0;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);
+  touch-action:none;
+}
+
+#message{
+  min-height:26px;
+  margin:5px 0 0;
+  text-align:center;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.35;
+  text-shadow:0 1px 2px #000;
+}
+
+#panel{
+  width:245px;
+  justify-self:center;
+  filter:drop-shadow(0 8px 18px rgba(0,0,0,.45));
+}
+
+#banner{
+  display:block;
+  width:100%;
+  height:auto;
+  margin:0 auto 5px;
+}
+
+.statsFrame{
+  position:relative;
+  width:100%;
+}
+
+#statsBg{
+  display:block;
+  width:100%;
+  height:auto;
+}
+
+#statsOverlay{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+.statValue{
+  position:absolute;
+  transform:translate(-50%,-50%);
+  min-width:44px;
+  max-width:100px;
+  text-align:center;
+  color:#f1d3a0;
+  font:bold 15px Georgia,"Times New Roman",serif;
+  line-height:1;
+  text-shadow:0 2px 3px #000;
+  white-space:nowrap;
+}
+
+#lives{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  min-width:70px;
+}
+
+.lifeIcon{
+  width:20px!important;
+  height:20px!important;
+  object-fit:contain;
+  display:inline-block;
+  margin:0 -1px;
+}
+
+#rulesBtn{
+  display:block;
+  width:100%;
+  margin:8px 0 0;
+  padding:9px 8px;
+  border:1px solid rgba(177,140,95,.7);
+  background:#1b1511;
+  color:#e7c894;
+  font:bold 14px Georgia,"Times New Roman",serif;
+  letter-spacing:.5px;
+  cursor:pointer;
+  text-transform:uppercase;
+  box-shadow:0 3px 9px rgba(0,0,0,.3);
+}
+
+#rulesBtn:hover{
+  background:#2a2019;
+}
+
+#effectInfoSide{
+  margin-top:7px;
+  padding:9px 10px;
+  min-height:54px;
+  border:1px solid rgba(142,110,76,.48);
+  background:rgba(12,10,9,.92);
+  box-shadow:0 3px 10px rgba(0,0,0,.28);
+}
+
+#effectInfoSide.hidden{
+  display:none;
+}
+
+.effectTitleSide{
+  color:#efd19b;
+  font-weight:bold;
+  font-size:14px;
+  margin-bottom:3px;
+}
+
+.effectTextSide{
+  color:#d6c6ae;
+  font-size:12px;
+  line-height:1.4;
+}
+
+#overlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:30;
+  background:rgba(0,0,0,.26);
+}
+
+#overlay.hidden{
+  display:none;
+}
+
+#overlayCard{
+  width:min(92%,360px);
+  max-width:360px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+#startCard{display:flex;flex-direction:column;align-items:center}
+#startPanelImage{
+  display:block;
+  width:100%;
+  height:auto;
+}
+
+#overlayButtons{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:-2px;
+  position:relative;
+  z-index:2;
+}
+
+.actionBtn{
+  display:block;
+  min-width:132px;
+  padding:9px 14px;
+  border:1px solid rgba(177,140,95,.7);
+  background:#1b1511;
+  color:#e7c894;
+  font:bold 14px Georgia,"Times New Roman",serif;
+  letter-spacing:.5px;
+  cursor:pointer;
+  box-shadow:0 3px 9px rgba(0,0,0,.3);
+}
+
+.actionBtn:hover{
+  background:#2a2019;
+}
+
+#touchControls{
+  display:none;
+  grid-template-columns:repeat(3,58px);
+  grid-template-rows:repeat(2,52px);
+  gap:5px;
+  justify-content:center;
+  margin-top:8px;
+}
+
+#touchControls button{
+  border:1px solid #7a6b58;
+  background:#1c1815;
+  color:#efd5ac;
+  font-size:22px;
+  padding:0;
+  touch-action:none;
+}
+
+#up{grid-column:2}
+#left{grid-column:1;grid-row:2}
+#down{grid-column:2;grid-row:2}
+#right{grid-column:3;grid-row:2}
+
+/* Rules */
+#rulesModal{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:14px;
+  z-index:100;
+  background:rgba(0,0,0,.72);
+}
+
+#rulesModal.hidden{
+  display:none;
+}
+
+.rulesCard{
+  width:min(92vw,720px);
+  max-height:88vh;
+  overflow:auto;
+  padding:20px 22px;
+  background:#15100c;
+  border:1px solid #806747;
+  box-shadow:0 14px 45px rgba(0,0,0,.6);
+  color:#e6d4b8;
+}
+
+.rulesCard h2{
+  margin:0 0 12px;
+  text-align:center;
+  color:#f0d39d;
+}
+
+.rulesCard h3{
+  margin:14px 0 5px;
+  color:#e4c28d;
+  font-size:15px;
+}
+
+.rulesCard p,
+.rulesCard li{
+  font-size:13px;
+  line-height:1.45;
+}
+
+.rulesGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px 18px;
+}
+
+.ruleItem{
+  padding:6px 0;
+  border-bottom:1px solid rgba(136,107,76,.25);
+}
+
+.rulesClose{
+  display:block;
+  margin:15px auto 0;
+  padding:8px 18px;
+  border:1px solid #7c6448;
+  background:#211914;
+  color:#efd5a4;
+  cursor:pointer;
+}
+
+@media(max-width:820px){
+  #layout{
+    grid-template-columns:1fr;
+  }
+
+  #panel{
+    width:min(330px,100%);
+  }
+
+  #touchControls{
+    display:grid;
+  }
+
+  #game{
+    max-height:none;
+  }
+
+  .rulesGrid{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(orientation:landscape) and (max-height:700px){
+  #app{
+    padding:4px 7px 8px;
+  }
+
+  #layout{
+    grid-template-columns:minmax(0,1fr) 205px;
+    gap:7px;
+  }
+
+  #panel{
+    width:205px;
+  }
+
+  #game{
+    max-height:calc(100vh - 48px);
+  }
+
+  #touchControls{
+    display:none;
+  }
+
+  #message{
+    min-height:18px;
+    margin:2px 0;
+    font-size:12px;
+  }
+
+  #effectInfoSide{
+    padding:7px 8px;
+  }
+
+  .effectTitleSide{
+    font-size:12px;
+  }
+
+  .effectTextSide{
+    font-size:11px;
+  }
+
+  #overlayCard{
+    width:min(74%,300px);
+  }
+
+  .imageBtn img{
+    width:130px;
+  }
+}
+
+@media(max-width:420px){
+  #overlayCard{
+    width:min(92%,300px);
+  }
+
+  .imageBtn img{
+    width:125px;
+  }
+}
+
+#gameOverCard{
+  width:min(92%,360px);
+  padding:20px 22px 18px;
+  background:#130f0c;
+  border:1px solid #806747;
+  box-shadow:0 12px 38px rgba(0,0,0,.55);
+  text-align:center;
+}
+
+#gameOverCard .actionBtn{
+  display:block;
+  margin:12px auto 0;
+}
+#gameOverCard.hidden{display:none}
+#gameOverCard img{
+  display:block;
+  width:100%;
+  height:auto;
+  margin-bottom:8px;
+  opacity:.94;
+}
+#gameOverCard h2{
+  margin:0 0 10px;
+  color:#efd29f;
+  font-size:20px;
+}
+#gameOverStats{
+  color:#e7d3b1;
+  line-height:1.7;
+  font-size:14px;
+}
+
+</style>
+</head>
+
+<body>
+<div id="app">
+  <div id="layout">
+    <section id="stage">
+      <canvas id="game" width="800" height="600"></canvas>
+
+      <div id="overlay">
+        <div id="overlayCard">
+          <div id="startCard">
+          <img id="startPanelImage"
+               src="https://upforme.ru/uploads/001c/b5/f3/3/165270.png"
+               alt="Охота за духами">
+
+          <div id="overlayButtons">
+            <button id="startBtn" class="actionBtn" type="button">▶ Старт</button>
+            <button id="continueBtn" class="actionBtn" type="button" hidden>▶ Продолжить</button>
+            <button id="restartBtn" class="actionBtn" type="button" hidden>↻ Начать заново</button>
+          </div>
+          </div>
+
+          <div id="gameOverCard" class="hidden">
+            <h2>Охота окончена</h2>
+<div id="gameOverStats"></div>
+            <div style="margin-top:12px">
+              <button id="gameOverRestartBtn" class="actionBtn" type="button">↻ Начать заново</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="message">Нажми «Старт».</div>
+
+      <div id="touchControls" aria-label="Управление">
+        <button id="up" type="button">↑</button>
+        <button id="left" type="button">←</button>
+        <button id="down" type="button">↓</button>
+        <button id="right" type="button">→</button>
+      </div>
+    </section>
+
+    <aside id="panel">
+      <img id="banner"
+           src="https://upforme.ru/uploads/001c/b5/f3/3/216013.png"
+           alt="Руквуд Мэнор"
+           loading="eager">
+
+      <div class="statsFrame">
+        <img id="statsBg"
+             src="https://upforme.ru/uploads/001c/b5/f3/3/479481.png"
+             alt="Статистика"
+             loading="eager">
+
+        <div id="statsOverlay">
+          <!-- Строки панели: огоньки, духи, жизни, соль, время, общее время, лабиринты, очки -->
+          <div id="score" class="statValue" style="top:15.7%;left:66%">0 / 20</div>
+          <div id="ghosts" class="statValue" style="top:27.8%;left:66%">3</div>
+          <div id="lives" class="statValue" style="top:39.3%;left:66%"></div>
+          <div id="salt" class="statValue" style="top:50.5%;left:66%">0</div>
+          <div id="mazeTime" class="statValue" style="top:61.8%;left:66%">00:00</div>
+          <div id="totalTime" class="statValue" style="top:72.8%;left:66%">00:00</div>
+          <div id="mazeCount" class="statValue" style="top:83.5%;left:66%">0</div>
+          <div id="points" class="statValue" style="top:93.3%;left:66%">0</div>
+        </div>
+      </div>
+
+      <button id="rulesBtn" type="button">Правила</button>
+
+      <div id="effectInfoSide" class="effectInfoSide">
+        <div id="effectTitleSide" class="effectTitleSide">Эффекты предметов</div>
+        <div id="effectTextSide" class="effectTextSide">
+          Здесь будет появляться подробное описание последнего найденного предмета.
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div id="rulesModal" class="hidden">
+  <div class="rulesCard">
+    <h2>Правила «Охоты за духами»</h2>
+
+    <h3>Цель</h3>
+    <p>Собери 20 огоньков и найди дверь, чтобы перейти в следующий случайно сгенерированный лабиринт. Время, очки и число пройденных лабиринтов сохраняются.</p>
+
+    <h3>Управление</h3>
+    <p>WASD / стрелки — движение. На мобильном экране — сенсорные кнопки. Пауза открывает кнопку «Продолжить» по центру игрового поля.</p>
+
+    <h3>Предметы и ловушки</h3>
+    <div class="rulesGrid">
+      <div class="ruleItem"><b>✨ Огонёк</b><br>+10 очков. Нужно собрать 20.</div>
+      <div class="ruleItem"><b>👻 Призрак</b><br>Столкновение отнимает 1 ❤️. После удара 3 секунды мигания и неуязвимости.</div>
+      <div class="ruleItem"><b>🧂 Соль</b><br>При подборе автоматически убирает одного призрака.</div>
+      <div class="ruleItem"><b>🕯️ Свеча</b><br>8 секунд подсвечивает скрытые ловушки поблизости.</div>
+      <div class="ruleItem"><b>🔮 Шар</b><br>7 секунд позволяет проходить сквозь стены.</div>
+      <div class="ruleItem"><b>👁️ Третий глаз</b><br>7 секунд позволяет видеть монетки в стенах и может работать одновременно с Шаром.</div>
+      <div class="ruleItem"><b>🃏 Таро</b><br>Даёт случайную карту и её особый эффект.</div>
+      <div class="ruleItem"><b>⚠️ Ловушка</b><br>Скрыта без Свечи. При срабатывании добавляет одного призрака.</div>
+      <div class="ruleItem"><b>🩹 Аптечка</b><br>Редко появляется во время прохождения и восстанавливает 1 ❤️.</div>
+      <div class="ruleItem"><b>🪙 Монетка</b><br>+25 очков. Глаз показывает её, Шар позволяет войти в стену и забрать её.</div>
+    </div>
+
+    <h3>Таро</h3>
+    <div class="rulesGrid">
+      <div class="ruleItem"><b>Колесо Фортуны</b><br>Скорость увеличена на 5 секунд.</div>
+      <div class="ruleItem"><b>Солнце</b><br>5 секунд полной неуязвимости.</div>
+      <div class="ruleItem"><b>Луна</b><br>Призраки ускоряются на 5 секунд.</div>
+    </div>
+
+    <button id="rulesClose" class="rulesClose" type="button">Закрыть</button>
+  </div>
+</div>
+
+<div id="assetStore" hidden>
+  <img id="fieldImg" src="https://upforme.ru/uploads/001c/b5/f3/3/819036.png" alt="">
+  <img id="wallImg" src="https://upforme.ru/uploads/001c/b5/f3/3/770959.png" alt="">
+  <img id="ghost1Img" src="https://upforme.ru/uploads/001c/b5/f3/3/975910.png" alt="">
+  <img id="ghost2Img" src="https://upforme.ru/uploads/001c/b5/f3/3/158499.png" alt="">
+  <img id="ghost3Img" src="https://upforme.ru/uploads/001c/b5/f3/3/975910.png" alt="">
+  <img id="playerImg" src="https://upforme.ru/uploads/001c/b5/f3/3/245796.png" alt="">
+  <img id="playerIdleImg" src="https://upforme.ru/uploads/001c/b5/f3/3/55745.png" alt="">
+  <img id="playerRightImg" src="https://upforme.ru/uploads/001c/b5/f3/3/395114.png" alt="">
+  <img id="playerLeftImg" src="https://upforme.ru/uploads/001c/b5/f3/3/314385.png" alt="">
+  <img id="playerDownImg" src="https://upforme.ru/uploads/001c/b5/f3/3/627368.png" alt="">
+  <img id="playerUpImg" src="https://upforme.ru/uploads/001c/b5/f3/3/177888.png" alt="">
+  <img id="doorImg" src="https://upforme.ru/uploads/001c/b5/f3/3/365057.png" alt="">
+  <img id="lightImg" src="https://upforme.ru/uploads/001c/b5/f3/3/203149.png" alt="">
+  <img id="saltImg" src="https://upforme.ru/uploads/001c/b5/f3/3/22597.png" alt="">
+  <img id="candleImg" src="https://upforme.ru/uploads/001c/b5/f3/3/27374.png" alt="">
+  <img id="crystalImg" src="https://upforme.ru/uploads/001c/b5/f3/3/535223.png" alt="">
+  <img id="eyeImg" src="https://upforme.ru/uploads/001c/b5/f3/3/272821.png" alt="">
+  <img id="tarotImg" src="https://upforme.ru/uploads/001c/b5/f3/3/81084.png" alt="">
+  <img id="breadImg" src="https://upforme.ru/uploads/001c/b5/f3/3/661872.png" alt="">
+  <img id="coinImg" src="https://upforme.ru/uploads/001c/b5/f3/3/957576.png" alt="">
+  <img id="trapImg" src="https://upforme.ru/uploads/001c/b5/f3/3/748204.png" alt="">
+  <img id="heartFullImg" src="https://upforme.ru/uploads/001c/b5/f3/3/690933.png" alt="">
+  <img id="heartEmptyImg" src="https://upforme.ru/uploads/001c/b5/f3/3/20508.png" alt="">
+</div>
+
+<script>
+"use strict";
+
+/* ---------- DOM ---------- */
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const ui = {
+  overlay: document.getElementById("overlay"),
+  startBtn: document.getElementById("startBtn"),
+  continueBtn: document.getElementById("continueBtn"),
+  restartBtn: document.getElementById("restartBtn"),
+  gameOverCard: document.getElementById("gameOverCard"),
+  gameOverStats: document.getElementById("gameOverStats"),
+  gameOverRestartBtn: document.getElementById("gameOverRestartBtn"),
+  startCard: document.getElementById("startCard"),
+  message: document.getElementById("message"),
+  effectInfo: document.getElementById("effectInfoSide"),
+  effectTitle: document.getElementById("effectTitleSide"),
+  effectText: document.getElementById("effectTextSide"),
+  rulesBtn: document.getElementById("rulesBtn"),
+  rulesModal: document.getElementById("rulesModal"),
+  rulesClose: document.getElementById("rulesClose"),
+  score: document.getElementById("score"),
+  ghosts: document.getElementById("ghosts"),
+  salt: document.getElementById("salt"),
+  lives: document.getElementById("lives"),
+  mazeTime: document.getElementById("mazeTime"),
+  totalTime: document.getElementById("totalTime"),
+  mazeCount: document.getElementById("mazeCount"),
+  points: document.getElementById("points")
+};
+
+const IMG = {
+  field: document.getElementById("fieldImg"),
+  wall: document.getElementById("wallImg"),
+  ghost1: document.getElementById("ghost1Img"),
+  ghost2: document.getElementById("ghost2Img"),
+  ghost3: document.getElementById("ghost3Img"),
+  player: document.getElementById("playerImg"),
+  playerIdle: document.getElementById("playerIdleImg"),
+  playerRight: document.getElementById("playerRightImg"),
+  playerLeft: document.getElementById("playerLeftImg"),
+  playerDown: document.getElementById("playerDownImg"),
+  playerUp: document.getElementById("playerUpImg"),
+  door: document.getElementById("doorImg"),
+  light: document.getElementById("lightImg"),
+  salt: document.getElementById("saltImg"),
+  candle: document.getElementById("candleImg"),
+  crystal: document.getElementById("crystalImg"),
+  eye: document.getElementById("eyeImg"),
+  tarot: document.getElementById("tarotImg"),
+  bread: document.getElementById("breadImg"),
+  coin: document.getElementById("coinImg"),
+  trap: document.getElementById("trapImg"),
+  heartFull: document.getElementById("heartFullImg"),
+  heartEmpty: document.getElementById("heartEmptyImg")
+};
+
+
+
+function setupAllAssetRedraw(){
+  Object.values(IMG).forEach(img=>{
+    if(!img)return;
+    img.addEventListener("load",()=>{
+      drawBase();
+      draw();
+    });
+  });
+}
+
+function setupAssetRedraw() {
+  const redrawAssets = [IMG.field, IMG.wall];
+
+  redrawAssets.forEach(img => {
+    if (!img) return;
+    img.addEventListener("load", () => {
+      drawBase();
+      draw();
+    });
+  });
+}
+
+/* ---------- CONSTANTS ---------- */
+const TILE = 40;
+const COLS = 20;
+const ROWS = 15;
+const TARGET_LIGHTS = 20;
+
+/* ---------- INPUT ---------- */
+const keys = {up:false,down:false,left:false,right:false};
+
+/* ---------- STATE ---------- */
+let map = [];
+let player = null;
+let ghosts = [];
+let lights = [];
+let saltItems = [];
+let bonuses = [];
+let traps = [];
+let secretZones = [];
+let coins = [];
+let bread = [];
+
+let lightsCollected = 0;
+let saltCollected = 0;
+let lives = 3;
+let points = 0;
+let mazeCount = 0;
+
+let running = false;
+let paused = true;
+let gameOver = false;
+
+let mazeStartedAt = 0;
+let totalElapsed = 0;
+let lastFrame = 0;
+
+let nextBreadSpawnAt = 0;
+let messageTimer = null;
+let effectTimer = null;
+let wasPhasing = false;
+
+/* ---------- HELPERS ---------- */
+function centerOf(c,r){
+  return {x:(c+.5)*TILE,y:(r+.5)*TILE};
+}
+
+function isFloor(c,r){
+  return c>=1 && c<COLS-1 && r>=1 && r<ROWS-1 && map[r][c]===".";
+}
+
+function isWallPixel(x,y){
+  const c=Math.floor(x/TILE);
+  const r=Math.floor(y/TILE);
+  return r<0 || r>=ROWS || c<0 || c>=COLS || map[r][c]==="#";
+}
+
+function canStand(x,y){
+  const r=10;
+  return !isWallPixel(x-r,y-r)&&
+         !isWallPixel(x+r,y-r)&&
+         !isWallPixel(x-r,y+r)&&
+         !isWallPixel(x+r,y+r);
+}
+
+function dist(a,b){
+  return Math.hypot(a.x-b.x,a.y-b.y);
+}
+
+function formatTime(ms){
+  const s=Math.max(0,Math.floor(ms/1000));
+  return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+}
+
+function msg(text,duration=1800){
+  ui.message.textContent=text;
+  clearTimeout(messageTimer);
+  messageTimer=setTimeout(()=>{
+    if(running && !paused && !gameOver){
+      ui.message.textContent=lightsCollected>=TARGET_LIGHTS
+        ? "Все огоньки собраны. Найди дверь."
+        : "Продолжай поиски…";
+    }
+  },duration);
+}
+
+function effect(title,text,duration=9000){
+  ui.effectTitle.textContent=title;
+  ui.effectText.textContent=text;
+  ui.effectInfo.classList.remove("hidden");
+  clearTimeout(effectTimer);
+  effectTimer=setTimeout(()=>{
+    ui.effectInfo.classList.add("hidden");
+  },duration);
+}
+
+function showOverlay(mode){
+  ui.overlay.classList.remove("hidden");
+
+  ui.startBtn.hidden = mode!=="start";
+  ui.continueBtn.hidden = mode!=="pause";
+  ui.restartBtn.hidden = !(mode==="pause" || mode==="gameover");
+
+  if(mode==="start"){
+    msg("Нажми «Старт».");
+  }else if(mode==="pause"){
+    msg("Игра на паузе.");
+  }else{
+    msg("Все жизни потеряны.");
+  }
+}
+
+function hideOverlay(){
+  ui.overlay.classList.add("hidden");
+}
+
+/* ---------- MAZE GENERATION ---------- */
+function generateMaze(){
+  const grid=Array.from({length:ROWS},()=>Array(COLS).fill("#"));
+
+  function carve(c,r){
+    grid[r][c]=".";
+    const dirs=[[2,0],[-2,0],[0,2],[0,-2]].sort(()=>Math.random()-.5);
+
+    for(const [dc,dr] of dirs){
+      const nc=c+dc,nr=r+dr;
+      if(nc>0&&nc<COLS-1&&nr>0&&nr<ROWS-1&&grid[nr][nc]==="#"){
+        grid[r+dr/2][c+dc/2]=".";
+        carve(nc,nr);
+      }
+    }
+  }
+
+  carve(1,1);
+
+  // Loops/branches.
+  const candidates=[];
+  for(let r=1;r<ROWS-1;r++){
+    for(let c=1;c<COLS-1;c++){
+      if(grid[r][c]!== "#") continue;
+      const h=grid[r][c-1]==="."&&grid[r][c+1]===".";
+      const v=grid[r-1][c]==="."&&grid[r+1][c]===".";
+      if(h||v)candidates.push([c,r]);
+    }
+  }
+  candidates.sort(()=>Math.random()-.5);
+  const extra=Math.min(candidates.length,Math.max(18,Math.floor(candidates.length*.45)));
+  for(let i=0;i<extra;i++){
+    grid[candidates[i][1]][candidates[i][0]]=".";
+  }
+
+  grid[1][1]=".";
+  grid[ROWS-2][COLS-2]="E";
+  grid[ROWS-2][COLS-3]=".";
+  grid[ROWS-3][COLS-2]=".";
+
+
+  return grid;
+}
+
+function randomFloor(count,minDistance=0){
+  const arr=[];
+  for(let r=1;r<ROWS-1;r++){
+    for(let c=1;c<COLS-1;c++){
+      if(!isFloor(c,r))continue;
+      if(c===16&&r===13)continue;
+
+      const p=centerOf(c,r);
+      if(player&&Math.hypot(p.x-player.x,p.y-player.y)<minDistance*TILE)continue;
+      arr.push([c,r]);
+    }
+  }
+  arr.sort(()=>Math.random()-.5);
+  return arr.slice(0,Math.min(count,arr.length));
+}
+
+function occupied(c,r){
+  return lights.some(x=>Math.floor(x.x/TILE)===c&&Math.floor(x.y/TILE)===r)||
+    saltItems.some(x=>x.c===c&&x.r===r)||
+    bonuses.some(x=>x.c===c&&x.r===r)||
+    traps.some(x=>x.c===c&&x.r===r)||
+    bread.some(x=>x.c===c&&x.r===r);
+}
+
+/* ---------- MAZE SETUP ---------- */
+function buildMaze(first=false){
+  map=generateMaze();
+
+  const start=centerOf(1,1);
+  player.x=start.x;
+  player.y=start.y;
+  player.invulnerableUntil=0;
+  player.phaseUntil=0;
+  player.candleUntil=0;
+  player.thirdEyeUntil=0;
+  player.speedBoostUntil=0;
+  player.direction="idle";
+  wasPhasing=false;
+
+  lights=[];
+  saltItems=[];
+  bonuses=[];
+  traps=[];
+  secretZones=[];
+  coins=[];
+  bread=[];
+
+  lightsCollected=0;
+  saltCollected=0;
+
+  // Lights.
+  for(const [c,r] of randomFloor(TARGET_LIGHTS,5)){
+    const p=centerOf(c,r);
+    lights.push({x:p.x,y:p.y,collected:false});
+  }
+
+  // Bonuses.
+  const bonusTypes=["crystal","candle","tarot","eye"];
+  randomFloor(4,4).forEach(([c,r],i)=>{
+    bonuses.push({c,r,type:bonusTypes[i],...centerOf(c,r)});
+  });
+
+  // Hidden traps.
+  for(const [c,r] of randomFloor(20,7)){
+    if(traps.length>=6)break;
+    if(occupied(c,r))continue;
+    traps.push({c,r,triggered:false});
+  }
+
+  // Salt.
+  for(const [c,r] of randomFloor(16,6)){
+    if(saltItems.length>=3)break;
+    if(occupied(c,r))continue;
+    saltItems.push({c,r,collected:false});
+  }
+
+  // Secret zones + coins in walls.
+  const candidates=[];
+  for(let r=1;r<ROWS-1;r++){
+    for(let c=1;c<COLS-1;c++){
+      if(!isFloor(c,r)||occupied(c,r))continue;
+      const nearWall=
+        map[r-1][c]==="#"||map[r+1][c]==="#"||
+        map[r][c-1]==="#"||map[r][c+1]==="#";
+      if(nearWall)candidates.push([c,r]);
+    }
+  }
+  candidates.sort(()=>Math.random()-.5);
+
+  for(const [c,r] of candidates){
+    if(secretZones.length>=3)break;
+
+    const zone={c,r,revealed:false};
+    secretZones.push(zone);
+
+    const walls=[[c-1,r],[c+1,r],[c,r-1],[c,r+1]]
+      .filter(([wc,wr])=>
+        wc>0&&wc<COLS-1&&wr>0&&wr<ROWS-1&&map[wr][wc]==="#"
+      );
+
+    for(const [wc,wr] of walls){
+      coins.push({c:wc,r:wr,collected:false,value:25,zone});
+    }
+  }
+
+  // Three ghosts.
+  const spawns=randomFloor(3,4);
+  ghosts=[
+    createGhost(spawns[0]||[4,1],IMG.ghost1,52),
+    createGhost(spawns[1]||[10,5],IMG.ghost2,46),
+    createGhost(spawns[2]||[15,9],IMG.ghost3,58)
+  ];
+
+  mazeCount++;
+  mazeStartedAt=performance.now();
+  nextBreadSpawnAt=mazeStartedAt+15000+Math.random()*15000;
+
+  // Сразу строим статический слой игрового поля и стен.
+  drawBase();
+
+  if(first){
+    totalElapsed=0;
+  }
+}
+
+/* ---------- GHOSTS ---------- */
+function createGhost(cell,img,speed){
+  const p=centerOf(cell[0],cell[1]);
+  return {x:p.x,y:p.y,img,speed,wobble:Math.random()*Math.PI*2,path:null,pathTimer:0};
+}
+
+function findPath(sx,sy,tx,ty){
+  const start={c:Math.floor(sx/TILE),r:Math.floor(sy/TILE)};
+  const goal={c:Math.floor(tx/TILE),r:Math.floor(ty/TILE)};
+
+  if(!isFloor(start.c,start.r)||!isFloor(goal.c,goal.r))return null;
+
+  const q=[start];
+  const seen=new Set([`${start.c},${start.r}`]);
+  const parent=new Map();
+
+  while(q.length){
+    const cur=q.shift();
+    if(cur.c===goal.c&&cur.r===goal.r){
+      const path=[];
+      let key=`${cur.c},${cur.r}`;
+      while(key){
+        const [c,r]=key.split(",").map(Number);
+        path.push({c,r});
+        key=parent.get(key);
+      }
+      path.reverse();
+      return path;
+    }
+
+    for(const [dc,dr] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const c=cur.c+dc,r=cur.r+dr,key=`${c},${r}`;
+      if(!isFloor(c,r)||seen.has(key))continue;
+      seen.add(key);
+      parent.set(key,`${cur.c},${cur.r}`);
+      q.push({c,r});
+    }
+  }
+  return null;
+}
+
+function updateGhosts(dt,now){
+  for(const g of ghosts){
+    g.pathTimer-=dt;
+
+    if(g.pathTimer<=0){
+      g.path=findPath(g.x,g.y,player.x,player.y);
+      g.pathTimer=.18;
+    }
+
+    if(!g.path||g.path.length<2)continue;
+
+    const next=centerOf(g.path[1].c,g.path[1].r);
+    const dx=next.x-g.x,dy=next.y-g.y,len=Math.hypot(dx,dy);
+    if(!len)continue;
+
+    const step=Math.min(g.speed*dt,len);
+    g.x+=dx/len*step;
+    g.y+=dy/len*step;
+    g.wobble+=dt*4;
+  }
+}
+
+/* ---------- PLAYER ---------- */
+function movePlayer(dx,dy,dt){
+  const len=Math.hypot(dx,dy);
+
+  if(!len){
+    player.direction="idle";
+    return;
+  }
+
+  // При диагональном движении ориентируем персонажа по доминирующей оси.
+  if(Math.abs(dx) >= Math.abs(dy)){
+    player.direction = dx > 0 ? "right" : "left";
+  }else{
+    player.direction = dy > 0 ? "down" : "up";
+  }
+
+  dx/=len;
+  dy/=len;
+  const speed=performance.now()<player.speedBoostUntil?225:player.speed;
+  const step=speed*dt;
+  const nx=player.x+dx*step,ny=player.y+dy*step;
+  const phasing=performance.now()<player.phaseUntil;
+
+  if(phasing||canStand(nx,player.y))player.x=nx;
+  if(phasing||canStand(player.x,ny))player.y=ny;
+}
+
+function resolveAfterPhase(){
+  if(canStand(player.x,player.y))return;
+
+  const sc=Math.floor(player.x/TILE),sr=Math.floor(player.y/TILE);
+  const q=[{c:sc,r:sr}],seen=new Set([`${sc},${sr}`]);
+
+  while(q.length){
+    const cur=q.shift();
+
+    if(isFloor(cur.c,cur.r)){
+      const p=centerOf(cur.c,cur.r);
+      if(canStand(p.x,p.y)){
+        player.x=p.x;
+        player.y=p.y;
+        return;
+      }
+    }
+
+    for(const [dc,dr] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const c=cur.c+dc,r=cur.r+dr,key=`${c},${r}`;
+      if(c<0||c>=COLS||r<0||r>=ROWS||seen.has(key))continue;
+      seen.add(key);
+      q.push({c,r});
+    }
+  }
+
+  const safe=centerOf(1,1);
+  player.x=safe.x;
+  player.y=safe.y;
+}
+
+/* ---------- COLLECTABLES ---------- */
+function collectLights(){
+  for(const item of lights){
+    if(!item.collected&&dist(player,item)<22){
+      item.collected=true;
+      lightsCollected++;
+      points+=10;
+
+      msg(lightsCollected===TARGET_LIGHTS?
+        "✨ Все огоньки собраны. Ищи дверь!":
+        "✨ Огонёк собран.",2200);
+
+      effect("✨ Огонёк","+10 очков. Нужно собрать 20 огоньков, чтобы открыть дверь.",7500);
+    }
+  }
+}
+
+function collectSalt(){
+  const c=Math.floor(player.x/TILE),r=Math.floor(player.y/TILE);
+
+  for(const item of saltItems){
+    if(item.collected||item.c!==c||item.r!==r)continue;
+
+    item.collected=true;
+    saltCollected++;
+
+    if(ghosts.length){
+      ghosts.shift();
+      msg("🧂 Соль изгнала одного духа!",2500);
+      effect("🧂 Соль","Автоматически убирает одного призрака из текущего лабиринта.",7500);
+    }else{
+      msg("🧂 Соль найдена. Духов больше нет.",2500);
+      effect("🧂 Соль","В лабиринте больше не осталось призраков.",7000);
+    }
+  }
+}
+
+function collectBonuses(now){
+  for(let i=bonuses.length-1;i>=0;i--){
+    const b=bonuses[i];
+    if(dist(player,b)>=24)continue;
+
+    if(b.type==="crystal"){
+      player.phaseUntil=now+7000;
+      player.invulnerableUntil=now+7000;
+      effect("🔮 Шар","7 секунд можно проходить сквозь стены и собирать монетки, которые показывает Третий глаз.",8500);
+      msg("🔮 Шар активирован.",2600);
+    }
+
+    if(b.type==="candle"){
+      player.candleUntil=now+8000;
+      effect("🕯️ Свеча","8 секунд подсвечивает скрытые ловушки в радиусе вокруг игрока.",8000);
+      msg("🕯️ Свеча зажжена.",2600);
+    }
+
+    if(b.type==="eye"){
+      player.thirdEyeUntil=now+7000;
+      effect("👁️ Третий глаз","7 секунд показывает монетки, спрятанные в стенах. Может работать одновременно с Шаром.",8500);
+      msg("👁️ Третий глаз открыт.",2600);
+    }
+
+    if(b.type==="tarot"){
+      const cards=[
+        ["Колесо Фортуны","Скорость увеличена на 5 секунд.","Фортуна помогает уйти от погони."],
+        ["Солнце","5 секунд полной неуязвимости.","Свет защищает тебя от духов."],
+        ["Луна","Призраки ускоряются на 5 секунд.","Туман сгущается — охота становится опаснее."]
+      ];
+
+      const card=cards[Math.floor(Math.random()*cards.length)];
+
+      if(card[0]==="Колесо Фортуны"){
+        player.speedBoostUntil=now+5000;
+      }else if(card[0]==="Солнце"){
+        player.invulnerableUntil=now+5000;
+      }else{
+        ghosts.forEach(g=>g.speed+=18);
+        setTimeout(()=>ghosts.forEach(g=>g.speed=Math.max(30,g.speed-18)),5000);
+      }
+
+      effect("🃏 "+card[0],card[1]+" "+card[2],9500);
+      msg("🃏 Таро: "+card[0],3200);
+    }
+
+    bonuses.splice(i,1);
+  }
+}
+
+function updateSecretZones(){
+  const active=performance.now()<player.thirdEyeUntil;
+  for(const z of secretZones){
+    const p=centerOf(z.c,z.r);
+    z.revealed=active&&dist(player,p)<=TILE*6;
+  }
+}
+
+function collectCoins(){
+  if(performance.now()>=player.phaseUntil)return;
+
+  for(const coin of coins){
+    if(coin.collected||!coin.zone.revealed)continue;
+
+    const p=centerOf(coin.c,coin.r);
+    if(dist(player,p)>=24)continue;
+
+    coin.collected=true;
+    points+=coin.value;
+    effect("🪙 Монетка","+25 очков. Третий глаз показывает такие монетки, а Шар позволяет войти в стену.",7500);
+    msg("🪙 +25 очков.",2500);
+  }
+}
+
+function spawnBread(now){
+  if(bread.some(x=>!x.collected))return;
+  if(now<nextBreadSpawnAt)return;
+
+  nextBreadSpawnAt=now+15000+Math.random()*15000;
+  if(Math.random()>.28)return;
+
+  for(const [c,r] of randomFloor(12,5)){
+    if(occupied(c,r))continue;
+    bread.push({c,r,collected:false});
+    msg("🩹 Где-то в лабиринте появилась аптечка…",2200);
+    break;
+  }
+}
+
+function collectBread(){
+  const c=Math.floor(player.x/TILE),r=Math.floor(player.y/TILE);
+
+  for(const item of bread){
+    if(item.collected||item.c!==c||item.r!==r)continue;
+
+    item.collected=true;
+
+    if(lives<3){
+      lives=Math.min(3,lives+1);
+      effect("🩹 Аптечка","+1 ❤️. Максимум — 3 жизни.",7000);
+      msg("🩹 Восстановлено одно сердечко.",2600);
+    }else{
+      effect("🩹 Аптечка","Жизни уже полные — максимум 3 ❤️.",6500);
+      msg("🩹 Жизни уже полные.",2200);
+    }
+  }
+}
+
+function triggerTraps(){
+  const c=Math.floor(player.x/TILE),r=Math.floor(player.y/TILE);
+
+  for(const trap of traps){
+    if(trap.triggered||trap.c!==c||trap.r!==r)continue;
+
+    trap.triggered=true;
+
+    const spawn=randomFloor(1,3)[0];
+    if(spawn){
+      ghosts.push(createGhost(spawn,IMG.ghost1,49));
+      effect("⚠️ Ловушка","Скрытая ловушка сработала и добавила ещё одного призрака.",7000);
+      msg("⚠️ Ловушка! Появился новый дух.",2700);
+    }
+  }
+}
+
+/* ---------- LIVES ---------- */
+function hitGhost(){
+  if(performance.now()<player.invulnerableUntil)return;
+
+  for(const ghost of ghosts){
+    if(dist(player,ghost)<22){
+      lives=Math.max(0,lives-1);
+      player.invulnerableUntil=performance.now()+3000;
+
+      const safe=centerOf(1,1);
+      player.x=safe.x;
+      player.y=safe.y;
+
+      effect("❤️ Потеря жизни","После удара 3 секунды неуязвимости. Игрок мигает и возвращается к старту лабиринта.",6500);
+      msg(lives>0?"👻 Потеряно одно сердечко. 3 секунды защиты.":"👻 Все три жизни потеряны.",2700);
+
+      if(lives<=0){
+        gameOver=true;
+        running=false;
+        paused=true;
+        showOverlay("gameover");
+      }
+      return;
+    }
+  }
+}
+
+/* ---------- DOOR ---------- */
+function checkDoor(){
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      if(map[r][c]!=="E")continue;
+
+      const p=centerOf(c,r);
+      if(dist(player,p)>=25)continue;
+
+      if(lightsCollected<TARGET_LIGHTS){
+        msg("🚪 Дверь закрыта. Нужны все 20 огоньков.",2300);
+        effect("🚪 Дверь","Собери все 20 огоньков, после чего дверь откроет следующий лабиринт.",6500);
+        return;
+      }
+
+      const elapsed=performance.now()-mazeStartedAt;
+      totalElapsed+=elapsed;
+
+      points+=Math.max(0,1000-Math.floor(elapsed/100));
+
+      buildMaze(false);
+      running=true;
+      paused=false;
+      gameOver=false;
+      lastFrame=performance.now();
+
+      hideOverlay();
+      msg("🚪 Новый лабиринт! Пройдено: "+Math.max(0,mazeCount-1)+".",2200);
+      return;
+    }
+  }
+}
+
+/* ---------- UI ---------- */
+function renderLives(){
+  ui.lives.innerHTML="";
+  for(let i=0;i<3;i++){
+    const img=(i<lives?IMG.heartFull:IMG.heartEmpty).cloneNode(true);
+    img.removeAttribute("id");
+    img.className="lifeIcon";
+    ui.lives.appendChild(img);
+  }
+}
+
+function updateUI(now=performance.now()){
+  ui.score.textContent=`${lightsCollected} / ${TARGET_LIGHTS}`;
+  ui.ghosts.textContent=String(ghosts.length);
+  ui.salt.textContent=String(saltCollected);
+  renderLives();
+  ui.mazeTime.textContent=running?formatTime(now-mazeStartedAt):"00:00";
+  ui.totalTime.textContent=formatTime(totalElapsed+(running?now-mazeStartedAt:0));
+  ui.mazeCount.textContent=String(Math.max(0,mazeCount-1));
+  ui.points.textContent=String(points);
+}
+
+/* ---------- DRAW ---------- */
+const baseCanvas=document.createElement("canvas");
+baseCanvas.width=800;
+baseCanvas.height=600;
+const baseCtx=baseCanvas.getContext("2d");
+
+function drawBase(){
+  if(IMG.field.complete){
+    baseCtx.drawImage(IMG.field,0,0,800,600);
+  }else{
+    baseCtx.fillStyle="#181a1d";
+    baseCtx.fillRect(0,0,800,600);
+  }
+
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const x=c*TILE,y=r*TILE;
+
+      if(map[r][c]==="#"){
+        if(IMG.wall.complete){
+          baseCtx.drawImage(IMG.wall,x,y,TILE,TILE);
+        }else{
+          baseCtx.fillStyle="#241d16";
+          baseCtx.fillRect(x,y,TILE,TILE);
+        }
+      }
+    }
+  }
+}
+
+function drawDoor(){
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      if(map[r][c]!=="E")continue;
+
+      const x=c*TILE,y=r*TILE;
+
+      if(IMG.door.complete){
+        ctx.save();
+
+        if (lightsCollected >= TARGET_LIGHTS) {
+          const glow = ctx.createRadialGradient(
+            x + TILE/2, y + TILE/2, 4,
+            x + TILE/2, y + TILE/2, 30
+          );
+          glow.addColorStop(0, "rgba(73, 255, 120, .58)");
+          glow.addColorStop(1, "rgba(73, 255, 120, 0)");
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(x + TILE/2, y + TILE/2, 30, 0, Math.PI*2);
+          ctx.fill();
+
+          ctx.shadowColor = "#4cff83";
+          ctx.shadowBlur = 14;
+        }
+
+        ctx.drawImage(IMG.door,x+3,y+1,TILE-6,TILE-2);
+
+        if(lightsCollected < TARGET_LIGHTS){
+          ctx.fillStyle="rgba(0,0,0,.38)";
+          ctx.fillRect(x+3,y+1,TILE-6,TILE-2);
+        }
+
+        ctx.restore();
+      }
+    }
+  }
+}
+
+function sprite(img,x,y,size=28,alpha=1,bob=0){
+  if(!img.complete)return;
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  ctx.drawImage(img,x-size/2,y-size/2+bob,size,size);
+  ctx.restore();
+}
+
+
+function drawLights(now){
+  for(const item of lights){
+    if(item.collected)continue;
+    const pulse=1+Math.sin(now/180+item.x)*.08;
+    sprite(IMG.light,item.x,item.y,27*pulse);
+  }
+}
+
+function drawSalt(){
+  for(const item of saltItems){
+    if(item.collected)continue;
+    const p=centerOf(item.c,item.r);
+    sprite(IMG.salt,p.x,p.y,27);
+  }
+}
+
+function drawBonuses(){
+  const icons={
+    crystal:IMG.crystal,
+    candle:IMG.candle,
+    eye:IMG.eye,
+    tarot:IMG.tarot
+  };
+
+  for(const item of bonuses){
+    sprite(icons[item.type],item.x,item.y,29);
+  }
+}
+
+function drawBread(){
+  for(const item of bread){
+    if(item.collected)continue;
+    const p=centerOf(item.c,item.r);
+    sprite(IMG.bread,p.x,p.y,28);
+  }
+}
+
+function drawTraps(){
+  if(performance.now()>=player.candleUntil)return;
+
+  for(const trap of traps){
+    if(trap.triggered)continue;
+    const p=centerOf(trap.c,trap.r);
+    if(dist(player,p)>TILE*5)continue;
+    sprite(IMG.trap,p.x,p.y,30);
+  }
+}
+
+function drawSecretCoins(){
+  if(performance.now()>=player.thirdEyeUntil)return;
+
+  for(const zone of secretZones){
+    if(!zone.revealed)continue;
+
+    for(const coin of coins){
+      if(coin.collected||coin.zone!==zone)continue;
+      const p=centerOf(coin.c,coin.r);
+      sprite(IMG.coin,p.x,p.y,23);
+    }
+  }
+}
+
+function drawGhosts(now){
+  for(const g of ghosts){
+    const bob=Math.sin(g.wobble)*2;
+    sprite(g.img,g.x,g.y,41,.9,bob);
+  }
+}
+
+function drawPlayer(now){
+  const flashing=performance.now()<player.invulnerableUntil&&! (performance.now()<player.phaseUntil);
+
+  // Blink during post-hit invulnerability.
+  if(flashing&&Math.floor(now/100)%2===0)return;
+
+  const playerSprite = {
+    idle: IMG.playerIdle || IMG.player,
+    right: IMG.playerRight || IMG.player,
+    left: IMG.playerLeft || IMG.player,
+    down: IMG.playerDown || IMG.player,
+    up: IMG.playerUp || IMG.player
+  }[player.direction] || IMG.player;
+
+  sprite(playerSprite,player.x,player.y,31);
+
+  if(performance.now()<player.phaseUntil){
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(player.x,player.y,19,0,Math.PI*2);
+    ctx.strokeStyle="#fff";
+    ctx.lineWidth=2;
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function draw(){
+  const now=performance.now();
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(baseCanvas,0,0);
+
+  drawDoor();
+  drawLights(now);
+  drawSalt();
+  drawBonuses();
+  drawBread();
+  drawTraps();
+  drawSecretCoins();
+  drawGhosts(now);
+  drawPlayer(now);
+}
+
+/* ---------- OVERLAY / RULES ---------- */
+function showOverlay(mode){
+  ui.overlay.classList.remove("hidden");
+
+  ui.startCard.style.display = mode==="gameover" ? "none" : "flex";
+  ui.gameOverCard.classList.toggle("hidden", mode!=="gameover");
+
+  ui.startBtn.hidden=mode!=="start";
+  ui.continueBtn.hidden=mode!=="pause";
+  ui.restartBtn.hidden=!(mode==="pause");
+
+  if(mode==="gameover"){
+    ui.gameOverStats.innerHTML =
+      "<div>🗺️ Пройдено лабиринтов: <b>" + Math.max(0, mazeCount-1) +
+      "</b></div><div>⭐ Очков: <b>" + points + "</b></div>";
+  }
+}
+
+function hideOverlay(){
+  ui.overlay.classList.add("hidden");
+}
+
+function startNewRun(){
+  running=false;
+  paused=true;
+  gameOver=false;
+
+  lightsCollected=0;
+  saltCollected=0;
+  lives=3;
+  points=0;
+  mazeCount=0;
+  totalElapsed=0;
+
+  player={
+    x:60,y:60,radius:11,speed:155,
+    direction:"idle",
+    invulnerableUntil:0,
+    phaseUntil:0,
+    candleUntil:0,
+    thirdEyeUntil:0,
+    speedBoostUntil:0
+  };
+
+  buildMaze(true);
+  drawBase();
+  showOverlay("start");
+  ui.effectInfo.classList.remove("hidden");
+  ui.effectTitle.textContent="Эффекты предметов";
+  ui.effectText.textContent="Собирай предметы и используй их эффекты, чтобы быстрее пройти лабиринт.";
+  updateUI();
+  draw();
+}
+
+function startGame(){
+  if(gameOver)return;
+
+  running=true;
+  paused=false;
+  lastFrame=performance.now();
+  mazeStartedAt=lastFrame;
+
+  hideOverlay();
+  ui.startBtn.hidden=true;
+  ui.continueBtn.hidden=true;
+  ui.restartBtn.hidden=true;
+
+  msg("Начало охоты…",1400);
+}
+
+function pauseGame(){
+  if(!running||gameOver)return;
+
+  running=false;
+  paused=true;
+
+  ui.startBtn.hidden=true;
+  ui.continueBtn.hidden=false;
+  ui.restartBtn.hidden=false;
+
+  showOverlay("pause");
+  msg("Игра на паузе.",2000);
+}
+
+function continueGame(){
+  if(gameOver)return;
+
+  running=true;
+  paused=false;
+  lastFrame=performance.now();
+  hideOverlay();
+
+  ui.startBtn.hidden=true;
+  ui.continueBtn.hidden=true;
+  ui.restartBtn.hidden=true;
+}
+
+function restartCurrentRun(){
+  startNewRun();
+}
+
+function openRules(){
+  ui.rulesModal.classList.remove("hidden");
+}
+
+function closeRules(){
+  ui.rulesModal.classList.add("hidden");
+}
+
+/* ---------- MAIN LOOP ---------- */
+function frame(now){
+  const dt=Math.min((now-lastFrame)/1000,.05);
+  lastFrame=now;
+
+  if(running&&!paused&&!gameOver){
+    const phasing=now<player.phaseUntil;
+
+    if(wasPhasing&&!phasing){
+      resolveAfterPhase();
+    }
+    wasPhasing=phasing;
+
+    let dx=0,dy=0;
+    if(keys.left)dx--;
+    if(keys.right)dx++;
+    if(keys.up)dy--;
+    if(keys.down)dy++;
+
+    movePlayer(dx,dy,dt);
+    updateGhosts(dt,now);
+    collectLights();
+    collectSalt();
+    collectBonuses(now);
+    updateSecretZones();
+    collectCoins();
+    spawnBread(now);
+    collectBread();
+    triggerTraps();
+    hitGhost();
+    checkDoor();
+  }
+
+  updateUI(now);
+  draw();
+  requestAnimationFrame(frame);
+}
+
+/* ---------- INPUT ---------- */
+function setKey(key,value){
+  keys[key]=value;
+}
+
+window.addEventListener("keydown",event=>{
+  if(event.key==="Escape"){
+    closeRules();
+  }
+
+  const k=event.key.toLowerCase();
+
+  if(k==="w"||k==="arrowup"){
+    setKey("up",true);
+    event.preventDefault();
+  }
+  if(k==="s"||k==="arrowdown"){
+    setKey("down",true);
+    event.preventDefault();
+  }
+  if(k==="a"||k==="arrowleft"){
+    setKey("left",true);
+    event.preventDefault();
+  }
+  if(k==="d"||k==="arrowright"){
+    setKey("right",true);
+    event.preventDefault();
+  }
+
+  if(event.code==="Space"){
+    if(running&&!paused)pauseGame();
+    else if(paused&&!gameOver)continueGame();
+    event.preventDefault();
+  }
+});
+
+window.addEventListener("keyup",event=>{
+  const k=event.key.toLowerCase();
+
+  if(k==="w"||k==="arrowup")setKey("up",false);
+  if(k==="s"||k==="arrowdown")setKey("down",false);
+  if(k==="a"||k==="arrowleft")setKey("left",false);
+  if(k==="d"||k==="arrowright")setKey("right",false);
+});
+
+function bindTouch(id,key){
+  const el=document.getElementById(id);
+
+  const down=e=>{
+    e.preventDefault();
+    setKey(key,true);
+  };
+
+  const up=e=>{
+    e.preventDefault();
+    setKey(key,false);
+  };
+
+  el.addEventListener("pointerdown",down);
+  el.addEventListener("pointerup",up);
+  el.addEventListener("pointercancel",up);
+  el.addEventListener("lostpointercapture",up);
+}
+
+bindTouch("up","up");
+bindTouch("down","down");
+bindTouch("left","left");
+bindTouch("right","right");
+
+/* ---------- BUTTONS ---------- */
+ui.startBtn.addEventListener("click",startGame);
+ui.continueBtn.addEventListener("click",continueGame);
+ui.restartBtn.addEventListener("click",restartCurrentRun);
+ui.gameOverRestartBtn.addEventListener("click",restartCurrentRun);
+ui.rulesBtn.addEventListener("click",openRules);
+ui.rulesClose.addEventListener("click",closeRules);
+
+ui.rulesModal.addEventListener("click",event=>{
+  if(event.target===ui.rulesModal)closeRules();
+});
+
+/* ---------- BOOT ---------- */
+setupAssetRedraw();
+setupAllAssetRedraw();
+startNewRun();
+lastFrame=performance.now();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
