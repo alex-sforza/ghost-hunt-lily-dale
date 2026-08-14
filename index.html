@@ -944,7 +944,16 @@ function buildMaze(first=false){
 /* ---------- GHOSTS ---------- */
 function createGhost(cell,img,speed){
   const p=centerOf(cell[0],cell[1]);
-  return {x:p.x,y:p.y,img,speed,wobble:Math.random()*Math.PI*2,path:null,pathTimer:0};
+  return {
+    x:p.x,
+    y:p.y,
+    img,
+    speed,
+    wobble:Math.random()*Math.PI*2,
+    path:null,
+    pathTimer:0,
+    targetKey:""
+  };
 }
 
 function findPath(sx,sy,tx,ty){
@@ -983,12 +992,19 @@ function findPath(sx,sy,tx,ty){
 }
 
 function updateGhosts(dt,now){
+  const targetC=Math.floor(player.x/TILE);
+  const targetR=Math.floor(player.y/TILE);
+  const targetKey=`${targetC},${targetR}`;
+
   for(const g of ghosts){
     g.pathTimer-=dt;
 
-    if(g.pathTimer<=0){
+    // Пересчитываем маршрут только при смене клетки игрока
+    // или раз в 0.4 секунды. Это резко снижает нагрузку.
+    if(g.pathTimer<=0 || g.targetKey!==targetKey){
       g.path=findPath(g.x,g.y,player.x,player.y);
-      g.pathTimer=.18;
+      g.targetKey=targetKey;
+      g.pathTimer=.4;
     }
 
     if(!g.path||g.path.length<2)continue;
